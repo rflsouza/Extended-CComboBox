@@ -19,7 +19,8 @@ CComboBoxExtList::CComboBoxExtList()
 	,m_bShowListTooltipOverItem(FALSE)
 	,m_bToolActive(FALSE)
 	,m_nPrevItem(-1),
-	m_hWndToolTip(NULL)
+	m_hWndToolTip(NULL),
+	m_nMaxTipWidth(SHRT_MAX)
 {
 }
 
@@ -75,6 +76,15 @@ void CComboBoxExtList::PreSubclassWindow()
 	::SendMessage(m_hWndToolTip, TTM_ADDTOOL, (WPARAM)0, (LPARAM)(LPTOOLINFO)&m_ToolInfo);
 
 	CListBox::PreSubclassWindow();
+}
+
+void CComboBoxExtList::SetMaxTipWidth(int &nMaxTipWidth)
+{ 
+	if (nMaxTipWidth <= SHRT_MAX) 
+	{
+		m_nMaxTipWidth = nMaxTipWidth;
+		::SendMessage(m_hWndToolTip, TTM_SETMAXTIPWIDTH, (WPARAM)0, (LPARAM)nMaxTipWidth);
+	}	
 }
 
 LRESULT CComboBoxExtList::OnLbFindString(WPARAM wParam, LPARAM lParam)

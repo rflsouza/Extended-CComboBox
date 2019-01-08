@@ -22,13 +22,19 @@ public:
 public:
 	BOOL m_bShowTooltip;
 	BOOL m_bTooltipOnInfo;
-	BOOL m_bShowListTooltipOverItem;	// this has meaning only when m_bTooltipOnInfo == TRUE
+	BOOL m_bShowListTooltipOverItem;	// this has meaning only when m_bTooltipOnInfo == TRUE	
 	CComboBoxExt* m_pComboBox;
 
 // Operations
 public:
 	TOOLINFO* GetToolInfo(){return &m_ToolInfo;}
 	HWND* GetToolTipHwnd(){return &m_hWndToolTip;}
+
+	/* Setting the display rectangle to xxx pixels. 
+	   https://docs.microsoft.com/en-us/windows/desktop/controls/implement-multiline-tooltips 
+	*/
+	void SetMaxTipWidth(int &nMaxTipWidth);
+	int GetMaxTipWidth() { return m_nMaxTipWidth;}
 
 // Overrides
 	// ClassWizard generated virtual function overrides
@@ -46,6 +52,7 @@ protected:
 	BOOL m_bToolActive;
 	HWND m_hWndToolTip;
 	TOOLINFO m_ToolInfo;
+	int m_nMaxTipWidth;
 
 	// Generated message map functions
 protected:

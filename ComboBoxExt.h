@@ -87,11 +87,12 @@ public:
 		bTooltipOnInfo = m_bTooltipOnInfo;
 		bShowEditTooltipOverItem = m_bShowEditTooltipOverItem;
 	}
-	void SetListTooltip(const BOOL bShowTooltip, BOOL bTooltipOnInfo = FALSE, BOOL bShowListTooltipOverItem = FALSE)
+	void SetListTooltip(const BOOL bShowTooltip, BOOL bTooltipOnInfo = FALSE, BOOL bShowListTooltipOverItem = FALSE, int nMaxTipWidth = SHRT_MAX)
 	{
 		m_ListBox.m_bShowTooltip = bShowTooltip;
 		m_ListBox.m_bTooltipOnInfo = bTooltipOnInfo;
 		m_ListBox.m_bShowListTooltipOverItem = bShowListTooltipOverItem;
+		m_ListBox.SetMaxTipWidth(nMaxTipWidth);
 	}
 	void GetListTooltip(BOOL& bShowTooltip, BOOL& bTooltipOnInfo, BOOL& bShowListTooltipOverItem)
 	{
