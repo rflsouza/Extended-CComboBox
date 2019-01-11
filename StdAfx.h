@@ -3,6 +3,10 @@
 //      are changed infrequently
 //
 
+#ifdef NDEBUG
+#define _AFXDLL
+#endif // NDEBUG
+
 #if !defined(AFX_STDAFX_H__939B8867_3068_11E0_8FFC_0050BF29759A__INCLUDED_)
 #define AFX_STDAFX_H__939B8867_3068_11E0_8FFC_0050BF29759A__INCLUDED_
 

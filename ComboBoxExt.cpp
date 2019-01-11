@@ -17,6 +17,7 @@ static char THIS_FILE[] = __FILE__;
 CComboBoxExt::CItemData::CItemData()
 	:m_dwItemData(CB_ERR)
 	,m_sItem(_T(""))
+	,m_sItemCompared(_T(""))
 	,m_bState(TRUE)
 	,m_bShowItemTooltip(TRUE)
 {
@@ -28,6 +29,8 @@ CComboBoxExt::CItemData::CItemData(DWORD dwItemData, LPCTSTR lpszString)
 {
 	m_dwItemData = dwItemData;
 	m_sItem = lpszString;
+	m_sItemCompared = m_sItem.MakeLower();
+	m_sItemCompared = CComboBoxExt::removeAccented(m_sItemCompared.GetBuffer(0));
 	m_sInfo.Empty();
 }
 
@@ -36,6 +39,8 @@ CComboBoxExt::CItemData::CItemData(DWORD dwItemData, LPCTSTR lpszString, BOOL bS
 {
 	m_dwItemData = dwItemData;
 	m_sItem = lpszString;
+	m_sItemCompared = m_sItem.MakeLower();
+	m_sItemCompared = CComboBoxExt::removeAccented(m_sItemCompared.GetBuffer(0));
 	m_sInfo.Empty();
 	m_bState = bState;
 }
@@ -45,6 +50,8 @@ CComboBoxExt::CItemData::CItemData(DWORD dwItemData, LPCTSTR lpszString, LPCTSTR
 {
 	m_dwItemData = dwItemData;
 	m_sItem = lpszString;
+	m_sItemCompared = m_sItem.MakeLower();
+	m_sItemCompared = CComboBoxExt::removeAccented(m_sItemCompared.GetBuffer(0));
 	m_sInfo = lpszInfo;
 	m_bState = bState;
 }
@@ -53,6 +60,8 @@ CComboBoxExt::CItemData::CItemData(DWORD dwItemData, LPCTSTR lpszString, LPCTSTR
 {
 	m_dwItemData = dwItemData;
 	m_sItem = lpszString;
+	m_sItemCompared = m_sItem.MakeLower();
+	m_sItemCompared = CComboBoxExt::removeAccented(m_sItemCompared.GetBuffer(0));
 	m_sInfo = lpszInfo;
 	m_bState = bState;
 	m_bShowItemTooltip = bShowItemTooltip;
@@ -77,8 +86,7 @@ CComboBoxExt::CComboBoxExt()
 	,m_bAutoComplete(TRUE)
 	,m_bAutoSelection(FALSE)
 	,m_bAdjustDroppedWidth(FALSE)	
-	,m_sFirstTextNotFound("")
-	,m_bFindInUsASCII(FALSE)
+	,m_sFirstTextNotFound("")	
 {
 	m_hWndToolTip = NULL;
 	m_crAlertBkg = GetSysColor(COLOR_WINDOW);
@@ -392,7 +400,22 @@ BOOL CComboBoxExt::OnSelchange()
 	return Default();
 }
 
-BOOL CComboBoxExt::OnEditchange() 
+BOOL CComboBoxExt::OnEditchange()
+{
+	if (BIG_LIST < m_PtrList.GetCount())
+	{
+		//waiting more char to search text. (prevent slow screen).
+		KillTimer(EventTimerEditchange);
+		SetTimer(EventTimerEditchange, 500, NULL);
+		return Default();
+	}
+	else
+	{
+		SearchText();
+	}
+}
+
+BOOL CComboBoxExt::SearchText()
 {
 	TRACE("%s\r\n", __FUNCTION__);
 	// TODO: Add your control notification handler code here
@@ -406,47 +429,60 @@ BOOL CComboBoxExt::OnEditchange()
 
 	GetWindowText(m_sTypedText);
 	CString sEditText(m_sTypedText);
-	sEditText.MakeLower();
-	if (m_bFindInUsASCII) {
-		sEditText = removeAccented(sEditText.GetBuffer(0));
+
+	if (BIG_LIST < m_PtrList.GetCount() && sEditText.GetLength() < 3) {
+		ShowDropDown(FALSE);		
+		return Default();
 	}
+
+	sEditText.MakeLower();
+	sEditText = removeAccented(sEditText.GetBuffer(0));	
 
 	if (!m_sTypedText.IsEmpty() && !m_sFirstTextNotFound.IsEmpty() && m_sTypedText.Find(m_sFirstTextNotFound) >= 0)
 	{
 		return Default();
 	}	
 
+	SetRedraw(FALSE);
+	BeginWaitCursor();
+
+	DWORD tickStart = GetTickCount();
+	TRACE("%s - Start. Busca:%s Items:%d \r\n", __FUNCTION__, m_sTypedText.GetBuffer(0), GetCount());
 	m_bEdit = TRUE;
 	CString sTemp, sFirstOccurrence;
 	POSITION pos = m_PtrList.GetHeadPosition();
 	while(! m_sTypedText.IsEmpty() && pos)
 	{
 		CItemData* pData = m_PtrList.GetNext(pos);
-		sTemp = pData->m_sItem;
-		sTemp.MakeLower();
-		if (m_bFindInUsASCII) 
-			sTemp = removeAccented(sTemp.GetBuffer(0));		
+		sTemp = pData->m_sItemCompared;		
 
 		if(MODE_AUTOCOMPLETE == m_nMode && 0 == sTemp.Find(sEditText)) /*encontra no começo da string, para o autocomplete*/
 			AddItem(pData);	
-		else if (-1 != sTemp.Find(sEditText)) /*encontra em qualquer lugar da string*/		
+		else if (FindAllStringOf(sTemp, sEditText)) /*encontra em qualquer lugar da string*/		
 			AddItem(pData);		
 		else		
 			DeleteItem(pData);		
 	}
 
+	EndWaitCursor();
+	SetRedraw(TRUE);
+	Invalidate();
+
 	if(GetCount() < 1 || m_sTypedText.IsEmpty())
 	{
-		if (m_sFirstTextNotFound.IsEmpty())
+		if (m_sFirstTextNotFound.IsEmpty() || m_sTypedText.Find(m_sFirstTextNotFound) == -1)
 			m_sFirstTextNotFound = m_sTypedText;		
 			
 		if(GetDroppedState())
 			ShowDropDown(FALSE);
 		else
 		{
-			pos = m_PtrList.GetHeadPosition();
-			while(NULL != pos)
-				AddItem(m_PtrList.GetNext(pos));
+			if (BIG_LIST > m_PtrList.GetCount())
+			{
+				pos = m_PtrList.GetHeadPosition();
+				while (NULL != pos)
+					AddItem(m_PtrList.GetNext(pos));
+			}			
 		}
 	}
 	else
@@ -473,6 +509,8 @@ BOOL CComboBoxExt::OnEditchange()
 
 	m_bAutoComplete = TRUE;
 
+	TRACE("%s - End. Busca:%s Items:%d Tempo:%ds \r\n", __FUNCTION__, m_sTypedText.GetBuffer(0), GetCount(), GetTickCount()-tickStart);
+
 	return Default();
 }
 
@@ -483,9 +521,12 @@ BOOL CComboBoxExt::OnCloseup()
 
 	::SendMessage(*m_ListBox.GetToolTipHwnd(), TTM_TRACKACTIVATE, (WPARAM)FALSE, (LPARAM)(LPTOOLINFO)m_ListBox.GetToolInfo());
 
-	POSITION pos = m_PtrList.GetHeadPosition();
-	while(NULL != pos)
-		AddItem(m_PtrList.GetNext(pos));
+	if (BIG_LIST > m_PtrList.GetCount())
+	{
+		POSITION pos = m_PtrList.GetHeadPosition();
+		while(NULL != pos)
+			AddItem(m_PtrList.GetNext(pos));
+	}	
 
 	if(m_bEdit && CBS_DROPDOWN == (3 & GetStyle()))
 	{
@@ -578,9 +619,11 @@ LRESULT CComboBoxExt::OnDeleteString(WPARAM wParam, LPARAM lParam)
 // Add item in dropdown list
 int CComboBoxExt::AddItem(CItemData* pData)
 {
-	TRACE("%s\r\n", __FUNCTION__);
+	//TRACE("%s\r\n", __FUNCTION__);
 	if(NULL == pData || TRUE == pData->m_bState)
 		return CB_ERR;
+
+	TRACE("%s ADD\r\n", __FUNCTION__);
 
 	int nIndex = SendMessage(CB_ADDSTRING, (WPARAM)m_PtrList.Find(pData), (LPARAM)(LPCTSTR)pData->m_sItem);
 	if(CB_ERR == nIndex || CB_ERRSPACE == nIndex)
@@ -595,11 +638,13 @@ int CComboBoxExt::AddItem(CItemData* pData)
 // Delete item from dropdown list
 int CComboBoxExt::DeleteItem(CItemData* pData)
 {
-	TRACE("%s\r\n", __FUNCTION__);
+	//TRACE("%s\r\n", __FUNCTION__);
 	int nIndex = CB_ERR;
 
 	if(NULL == pData || FALSE == pData->m_bState)
 		return nIndex;
+
+	TRACE("%s Delete\r\n", __FUNCTION__);
 
 	pData->m_bState = FALSE;
 	const int nCount = GetCount();
@@ -703,11 +748,11 @@ void CComboBoxExt::OnMouseMove(UINT nFlags, CPoint point)
 				::SendMessage(m_hWndToolTip, TTM_TRACKPOSITION, (WPARAM)0, (LPARAM)MAKELONG(rectClient.left, m_bEditTooltipOverItemPos ? rectClient.top - nComboButtonWidth - 1 : rectClient.top));
 				::SendMessage(m_hWndToolTip, TTM_TRACKACTIVATE, (WPARAM)TRUE, (LPARAM)(LPTOOLINFO)&m_ToolInfo);
 				m_bToolActive = TRUE;
-				SetTimer(1, 80, NULL);
+				SetTimer(EventTimerToolTip, 80, NULL);
 			}
 			else	// text fits inside client rect
 			{
-				SetTimer(1, 80, NULL);
+				SetTimer(EventTimerToolTip, 80, NULL);
 			}
 		}
 		else	// tooltip text is retrieved from additional info
@@ -718,11 +763,11 @@ void CComboBoxExt::OnMouseMove(UINT nFlags, CPoint point)
 				::SendMessage(m_hWndToolTip, TTM_TRACKPOSITION, (WPARAM)0, (LPARAM)MAKELONG(m_bShowEditTooltipOverItem ? rectClient.left + 1 : rectClient.right + nComboButtonWidth - 1, m_bEditTooltipOverItemPos ? rectClient.top - nComboButtonWidth - 1 : rectClient.top + 3));
 				::SendMessage(m_hWndToolTip, TTM_TRACKACTIVATE, (WPARAM)TRUE, (LPARAM)(LPTOOLINFO)&m_ToolInfo);
 				m_bToolActive = TRUE;
-				SetTimer(1, 80, NULL);
+				SetTimer(EventTimerToolTip, 80, NULL);
 			}
 			else
 			{
-				SetTimer(1, 80, NULL);
+				SetTimer(EventTimerToolTip, 80, NULL);
 			}
 		}
 	}
@@ -730,7 +775,7 @@ void CComboBoxExt::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		::SendMessage(m_hWndToolTip, TTM_TRACKACTIVATE, (WPARAM)FALSE, (LPARAM)(LPTOOLINFO)&m_ToolInfo);
 		m_bToolActive = FALSE;
-		SetTimer(1, 80, NULL);
+		SetTimer(EventTimerToolTip, 80, NULL);
 	}
 }
 
@@ -741,25 +786,36 @@ void CComboBoxExt::OnTimer(UINT nIDEvent)
 
 	CComboBox::OnTimer(nIDEvent);
 
-	CPoint point;
-	::GetCursorPos(&point);
-	ScreenToClient(&point);
+	// ToolTipEvent Timer
+	if (nIDEvent == EventTimerToolTip)
+	{	
+		CPoint point;
+		::GetCursorPos(&point);
+		ScreenToClient(&point);
 
-	CRect rectClient;
-	GetClientRect(&rectClient);
-	int nComboButtonWidth = GetSystemMetrics(SM_CXHTHUMB) + 2;
-	rectClient.right = rectClient.right - nComboButtonWidth;
+		CRect rectClient;
+		GetClientRect(&rectClient);
+		int nComboButtonWidth = GetSystemMetrics(SM_CXHTHUMB) + 2;
+		rectClient.right = rectClient.right - nComboButtonWidth;
 
-	if(! rectClient.PtInRect(point))
+		if(! rectClient.PtInRect(point))
+		{
+			KillTimer(nIDEvent);
+			::SendMessage(m_hWndToolTip, TTM_TRACKACTIVATE, (WPARAM)FALSE, (LPARAM)(LPTOOLINFO)&m_ToolInfo);
+			m_bToolActive = FALSE;
+		}
+	}
+	// textChangeEvent Timer
+	else if (nIDEvent == EventTimerEditchange)
 	{
 		KillTimer(nIDEvent);
-		::SendMessage(m_hWndToolTip, TTM_TRACKACTIVATE, (WPARAM)FALSE, (LPARAM)(LPTOOLINFO)&m_ToolInfo);
-		m_bToolActive = FALSE;
+		SearchText();		
 	}
 }
 
 int CComboBoxExt::AddStringWithInfo(LPCTSTR lpszString, LPCTSTR lpszInfo, BOOL bShowItemTooltip/* = TRUE*/)
 {
+	TRACE("%s\r\n", __FUNCTION__);
 	int nIndex = (int)SendMessage(CB_ADDSTRING, (WPARAM)0, (LPARAM)lpszString);
 	SetLBInfo(nIndex, lpszInfo, bShowItemTooltip);
 
@@ -895,4 +951,20 @@ char* CComboBoxExt::removeAccented(char* str) {
 		++p;
 	}
 	return str;
+}
+
+BOOL CComboBoxExt::FindAllStringOf(const CString & source, const CString & find, const CString & tokens /*= ' '*/, const bool &searchInSequence /*= false*/)
+{	
+	int idxFind = 0, idxSource = 0;
+	for (CString word = find.Tokenize(tokens, idxFind); idxFind >= 0; word = find.Tokenize(tokens, idxFind)) {
+		
+		idxSource = source.Find(word, idxSource);
+
+		if (!searchInSequence && idxSource > 0)
+			idxSource = 0;
+
+		if (idxSource == -1)
+			return FALSE;
+	}		
+	return TRUE;
 }

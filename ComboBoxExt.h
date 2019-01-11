@@ -30,6 +30,14 @@ public:
 		MODE_DROPDOWN			= 1,
 		MODE_AUTOCOMPLETE		= 2
 	};
+	
+	static const int BIG_LIST = 100;
+
+	enum enumEventTimer
+	{
+		EventTimerToolTip = 1,
+		EventTimerEditchange = 2
+	};
 
 // Operations
 public:
@@ -55,12 +63,20 @@ public:
 	virtual int FindInfoExact(int nIndexStart, LPCTSTR lpszFind) const;
 	virtual int SelectInfo(int nStartAfter, LPCTSTR lpszString);
 
-	/* Remove os acentos
-	Convert ISO 8859-1 (ISO-Latin-1) para US-ASCII (20127)
+	/* remove accents
+	Convert ISO 8859-1 (ISO-Latin-1) to US-ASCII (20127)
 	https://en.wikipedia.org/wiki/ISO/IEC_8859-1
 	http://stackoverflow.com/questions/14094621/
 	*/
 	static char* removeAccented(char* str);
+
+	/* Find ALL strings in source in sequence.
+
+		tokens = set tokens to split find string ' '.
+		searchInSequence = search all words in sequence. Default is false
+	*/
+	static BOOL FindAllStringOf(const CString &source, const CString &find, const CString &tokens = " ", const bool &searchInSequence = false);
+	
 
 	void AlertBkg(const BOOL bAlert = TRUE, BOOL bRedraw = FALSE)
 	{
@@ -109,16 +125,6 @@ public:
 		return m_bEditTooltipOverItemPos;
 	}
 
-	//Find using character us-ASC, ignore accenture.
-	void SetFindInUsASCII(const BOOL bFindInUsASCII = TRUE)
-	{
-		m_bFindInUsASCII = bFindInUsASCII;
-	}
-	BOOL GetFindInUsASCII() const
-	{
-		return m_bFindInUsASCII;
-	}
-
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CComboBoxExt)
@@ -163,8 +169,6 @@ protected:
 	BOOL m_bTooltipOnInfo;
 	BOOL m_bShowEditTooltipOverItem;	// this has meaning only when m_bTooltipOnInfo == TRUE
 	BOOL m_bEditTooltipOverItemPos;		// this has meaning only when m_bShowEditTooltipOverItem == TRUE
-	//Find using character us-ASC, ignore accenture.
-	BOOL m_bFindInUsASCII;
 	CBrush m_BrushAlert;
 	COLORREF m_crAlertBkg;
 	COLORREF m_crAlertText;
@@ -175,6 +179,7 @@ protected:
 	public:
 		DWORD m_dwItemData;
 		CString m_sItem;
+		CString m_sItemCompared;
 		CString m_sInfo;
 		BOOL m_bState;
 		BOOL m_bShowItemTooltip;
@@ -205,6 +210,7 @@ protected:
 	afx_msg BOOL OnSelendok();
 	afx_msg BOOL OnSelchange();
 	afx_msg BOOL OnEditchange();
+	BOOL SearchText();
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnTimer(UINT nIDEvent);

@@ -8,12 +8,11 @@ This is a copy from _Flaviu  [codeproject](https://www.codeproject.com/Articles/
 
 
 Changes:
-- (add) Find using character us-ASC, ignore accenture.
-  Use: m_Combo1.SetFindInUsASCII(TRUE);
+- (add) Find using character us-ASC, ignore accenture.  
 - (add) Setting the display rectangle to List Tooltip. 
   Use: m_Combo1.SetListTooltip(,,,int nMaxTipWidth = SHRT_MAX)
   Reference: https://docs.microsoft.com/en-us/windows/desktop/controls/implement-multiline-tooltips
-- (change) In mode dropdown, search text in any part of the string.
+- (change) In mode dropdown, search text (all words) in any part of the string.
 - (fix) Leak in destroy object.
 
 References:

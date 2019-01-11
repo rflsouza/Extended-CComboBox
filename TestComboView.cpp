@@ -88,6 +88,13 @@ void CTestComboView::OnInitialUpdate()
 
 	//m_Combo1.AdjustDroppedWidth();
 
+	// To performance
+	// Initialize the storage of the combo box to be 10000 strings with 
+	// about 1024 characters per string, performance improvement. 
+	int nAlloc = m_Combo1.InitStorage(8100, 1024);
+	ASSERT(nAlloc != CB_ERRSPACE);
+	m_Combo1.ModifyStyle(0, CBS_SORT);	
+
 	int nIndex = CB_ERR;
 	m_Combo1.ResetContent();	
 	nIndex = m_Combo1.AddStringWithInfo(_T("Lorem ipsum dolor sit amet, consectetuer adipiscing elit"), _T("Ação\n Lorem\n ipsum dolor sit amet, consectetuer adipiscing elit"));
@@ -151,17 +158,17 @@ void CTestComboView::OnInitialUpdate()
 	m_Combo1.AddStringWithInfo(_T("ação é agora quero só ver!"), _T("Ação Lorem ipsum dolor sit amet, consectetuer adipiscing elit"));
 	m_Combo1.AddStringWithInfo(_T("Ação é agora quero só ver!"), _T("Ação Lorem ipsum dolor sit amet, consectetuer adipiscing elit"));
 	m_Combo1.AddStringWithInfo(_T("AÇÃO é agora quero só ver!"), _T("Ação Lorem ipsum dolor sit amet, consectetuer adipiscing elit"));
-
-	CString concatstring;
-	for (int x = 0; x < 1000; x++) {
-		concatstring.Format("AÇÃO é agora quero só ver! %d", x);
-		m_Combo1.AddStringWithInfo(concatstring, concatstring);
+	
+	CString temp;
+	for (int x = 0; x < 8000; x++) {
+		temp.Format("Adicionando a String[%d] de teste, quero ver o comportamento agora. AÇÃO é agora quero só ver! %d", x, x);
+		m_Combo1.AddStringWithInfo(temp, temp);
 	}
-
-	m_Combo1.SetFindInUsASCII();
+	
 	m_Combo1.AdjustDroppedWidth();
 	m_Combo1.SetEditTooltip(TRUE);	
-	m_Combo1.SetListTooltip(TRUE);
+	m_Combo1.SetListTooltip(TRUE);	
+	
 
 	if(! m_ToolTips.GetSafeHwnd())
 	{
@@ -226,9 +233,9 @@ void CTestComboView::OnInitialUpdate()
 
 	nIndex = CB_ERR;
 	m_Combo5.ResetContent();	
-	nIndex = m_Combo5.AddString(_T("One"));
+	nIndex = m_Combo5.AddStringWithInfo(_T("One"), _T("Tooltip One"));
 	m_Combo5.SetItemData(nIndex, 100);
-	nIndex = m_Combo5.AddString(_T("Two"));
+	nIndex = m_Combo5.AddStringWithInfo(_T("Two"), _T("Tooltip Two"));
 	m_Combo5.SetItemData(nIndex, 200);
 	
 	nIndex = m_Combo5.AddStringWithInfo(_T("acao é agora quero só ver!"), _T("acao é agora quero só ver!\nacao é agora quero só ver!\nacao é agora quero só ver!"));
@@ -243,8 +250,7 @@ void CTestComboView::OnInitialUpdate()
 	m_Combo5.SetItemData(nIndex, 700);
 	nIndex = m_Combo5.AddStringWithInfo(_T("AÇÃO é agora quero só ver!"), _T("Ação"));
 	m_Combo5.SetItemData(nIndex, 800);
-
-	m_Combo5.SetFindInUsASCII();
+	
 	m_Combo5.AdjustDroppedWidth();
 	m_Combo5.SetEditTooltip(TRUE);	
 	m_Combo5.SetListTooltip(TRUE, TRUE, FALSE, 250);
