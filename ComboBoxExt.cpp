@@ -435,19 +435,21 @@ BOOL CComboBoxExt::SearchText()
 		return Default();
 	}
 
+	sEditText.Trim();
 	sEditText.MakeLower();
 	sEditText = removeAccented(sEditText.GetBuffer(0));	
 
-	if (!m_sTypedText.IsEmpty() && !m_sFirstTextNotFound.IsEmpty() && m_sTypedText.Find(m_sFirstTextNotFound) >= 0)
+ 	if (!m_sTypedText.IsEmpty() && !m_sFirstTextNotFound.IsEmpty() && m_sTypedText.Find(m_sFirstTextNotFound) >= 0)
 	{
 		return Default();
 	}	
 
 	SetRedraw(FALSE);
-	BeginWaitCursor();
+	SetCursor(AfxGetApp()->LoadStandardCursor(IDC_WAIT));
 
 	DWORD tickStart = GetTickCount();
 	TRACE("%s - Start. Busca:%s Items:%d \r\n", __FUNCTION__, m_sTypedText.GetBuffer(0), GetCount());
+
 	m_bEdit = TRUE;
 	CString sTemp, sFirstOccurrence;
 	POSITION pos = m_PtrList.GetHeadPosition();
@@ -464,7 +466,7 @@ BOOL CComboBoxExt::SearchText()
 			DeleteItem(pData);		
 	}
 
-	EndWaitCursor();
+	SetCursor(AfxGetApp()->LoadStandardCursor(IDC_ARROW));
 	SetRedraw(TRUE);
 	Invalidate();
 
@@ -953,7 +955,7 @@ char* CComboBoxExt::removeAccented(char* str) {
 	return str;
 }
 
-BOOL CComboBoxExt::FindAllStringOf(const CString & source, const CString & find, const CString & tokens /*= ' '*/, const bool &searchInSequence /*= false*/)
+BOOL CComboBoxExt::FindAllStringOf(const CString & source, const CString & find, const CString & tokens /*= " "*/, const bool &searchInSequence /*= false*/)
 {	
 	int idxFind = 0, idxSource = 0;
 	for (CString word = find.Tokenize(tokens, idxFind); idxFind >= 0; word = find.Tokenize(tokens, idxFind)) {

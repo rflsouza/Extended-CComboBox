@@ -167,7 +167,7 @@ void CTestComboView::OnInitialUpdate()
 	
 	m_Combo1.AdjustDroppedWidth();
 	m_Combo1.SetEditTooltip(TRUE);	
-	m_Combo1.SetListTooltip(TRUE);	
+	m_Combo1.SetListTooltip(TRUE, TRUE);	
 	
 
 	if(! m_ToolTips.GetSafeHwnd())
@@ -401,6 +401,7 @@ void CTestComboView::OnKillfocusCombo1()
 		sTemp.Format(_T("Index: %d, itemdata: %d"),m_Combo1.GetCurSel(),m_Combo1.GetItemData(m_Combo1.GetCurSel()));
 	else
 		sTemp.Format("null");
+	TRACE("OnKillfocusCombo1 %s\n", sTemp);
 	SetDlgItemText(IDC_EDIT1, sTemp);
 }
 
