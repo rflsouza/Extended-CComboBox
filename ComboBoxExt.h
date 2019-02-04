@@ -43,6 +43,7 @@ public:
 public:
 	BOOL IsAlertBkg() const {return m_bAlertBkg;}
 	BOOL IsAlertText() const {return m_bAlertText;}
+	BOOL IsTextColorNotFoundEnable() const { return m_bTextColorNotFoundEnable; }
 	BOOL IsAdjustedDroppedWidth() const {return m_bAdjustDroppedWidth;}
 	int GetMode() const {return m_nMode;}
 	void SetMode(int nMode = CComboBoxExt::MODE_STANDARD){m_nMode = nMode;}
@@ -51,6 +52,8 @@ public:
 	void SetAlertColorBkg(const COLORREF crColor);
 	COLORREF GetAlertColorText() const {return m_crAlertText;}
 	void SetAlertColorText(const COLORREF crColor){m_crAlertText = crColor;}
+	COLORREF GetTextColorNotFound() const { return m_crTextColorNotFound; }
+	void SetTextColorNotFound(const COLORREF crColor) { m_crTextColorNotFound = crColor; }	
 
 	virtual int AddStringWithInfo(LPCTSTR lpszString, LPCTSTR lpszInfo, BOOL bShowItemTooltip = TRUE);
 	virtual int InsertStringWithInfo(int nIndex, LPCTSTR lpszString, LPCTSTR lpszInfo, BOOL bShowItemTooltip = TRUE);
@@ -89,6 +92,12 @@ public:
 		m_bAlertText = bAlert;
 		if(bRedraw)
 			Invalidate();
+	}
+
+	//  Enable Change Text Color in Not Found search.
+	void SetTextColorNotFoundEnable(const BOOL bAlert = TRUE)
+	{
+		m_bTextColorNotFoundEnable = bAlert;	
 	}
 
 	void SetEditTooltip(const BOOL bShowTooltip, BOOL bTooltipOnInfo = FALSE, BOOL bShowEditTooltipOverItem = FALSE)
@@ -163,6 +172,9 @@ protected:
 	int m_nMode;
 	BOOL m_bAlertBkg;
 	BOOL m_bAlertText;
+	BOOL m_bTextColorNotFound; // use in OnCtlColor	
+	// Enable Change Text Color in Not Found search.
+	BOOL m_bTextColorNotFoundEnable;
 	BOOL m_bAdjustDroppedWidth;
 	BOOL m_bAutoComplete;
 	BOOL m_bShowTooltip;
@@ -172,6 +184,7 @@ protected:
 	CBrush m_BrushAlert;
 	COLORREF m_crAlertBkg;
 	COLORREF m_crAlertText;
+	COLORREF m_crTextColorNotFound;
 
 	class CItemData : public CObject
 	{

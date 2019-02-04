@@ -12,6 +12,7 @@ Changes:
 - (add) Setting the display rectangle to List Tooltip. 
   Use: m_Combo1.SetListTooltip(,,,int nMaxTipWidth = SHRT_MAX)
   Reference: https://docs.microsoft.com/en-us/windows/desktop/controls/implement-multiline-tooltips
+- (add) Enable Change Text Color in Not Found search. To Enable use SetTextColorNotFoundEnable(TRUE),  to change color use SetTextColorNotFound(RGB) Default is RED.
 - (change) In mode dropdown, search text (all words) in any part of the string.
 - (fix) Leak in destroy object.
 

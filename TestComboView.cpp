@@ -93,7 +93,9 @@ void CTestComboView::OnInitialUpdate()
 	// about 1024 characters per string, performance improvement. 
 	int nAlloc = m_Combo1.InitStorage(8100, 1024);
 	ASSERT(nAlloc != CB_ERRSPACE);
-	m_Combo1.ModifyStyle(0, CBS_SORT);	
+	BOOL teste;
+	teste = m_Combo1.ModifyStyle(CBS_SORT | LBS_SORT, 0);
+	
 
 	int nIndex = CB_ERR;
 	m_Combo1.ResetContent();	
@@ -162,12 +164,22 @@ void CTestComboView::OnInitialUpdate()
 	CString temp;
 	for (int x = 0; x < 8000; x++) {
 		temp.Format("Adicionando a String[%d] de teste, quero ver o comportamento agora. AÇÃO é agora quero só ver! %d", x, x);
-		m_Combo1.AddStringWithInfo(temp, temp);
+		//m_Combo1.AddStringWithInfo(temp, temp);
 	}
 	
 	m_Combo1.AdjustDroppedWidth();
 	m_Combo1.SetEditTooltip(TRUE);	
 	m_Combo1.SetListTooltip(TRUE, TRUE);	
+
+	m_Combo1.SetAlertColorBkg(RGB(255, 0, 0));
+	m_Combo1.SetAlertColorText(RGB(255, 0, 0));
+	m_Combo1.SetTextColorNotFoundEnable(TRUE);	
+
+	/*//////////////////////////////////////////////
+		m_Combo1.SetTextColorNotFound(RGB(0, 255, 0));
+		m_Combo1.AlertBkg();
+		m_Combo1.AlertText();
+	///*//////////////////////////////////////////////
 	
 
 	if(! m_ToolTips.GetSafeHwnd())
@@ -220,12 +232,6 @@ void CTestComboView::OnInitialUpdate()
 	m_Combo4.AddStringWithInfo(_T("G:\\DVD\\Mov...edies"), _T("G:\\DVD\\Movies\\Comedies"), TRUE);
 	m_Combo4.SetCurSel(0);
 	m_Combo4.SetEditTooltip(TRUE, TRUE, TRUE);
-/*//////////////////////////////////////////////
-	m_Combo1.SetAlertColorBkg(RGB(255, 0, 0));
-	m_Combo1.SetAlertColorText(RGB(0, 0, 255));
-	m_Combo1.AlertBkg();
-	m_Combo1.AlertText();
-///*//////////////////////////////////////////////
 
 
 	
@@ -339,7 +345,7 @@ void CTestComboView::OnButtonText()
 	// TODO: Add your control notification handler code here
 
 	m_bAlertText = ! m_bAlertText;
-	m_Combo1.AlertText(m_bAlertText);
+	m_Combo1.AlertText(m_bAlertText, TRUE);
 
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
 	pFrame->SetMessageText(_T("You ca toggle text alert pressing again 'Alert Text' button"));
@@ -350,7 +356,7 @@ void CTestComboView::OnButtonBkg()
 	// TODO: Add your control notification handler code here
 
 	m_bAlertBkg = ! m_bAlertBkg;
-	m_Combo1.AlertBkg(m_bAlertBkg);
+	m_Combo1.AlertBkg(m_bAlertBkg,TRUE);
 
 	CMainFrame* pFrame = (CMainFrame*)AfxGetMainWnd();
 	pFrame->SetMessageText(_T("You ca toggle background alert pressing again 'Alert Bkg' button"));

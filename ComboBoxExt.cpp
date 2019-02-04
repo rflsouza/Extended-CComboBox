@@ -78,6 +78,8 @@ CComboBoxExt::CComboBoxExt()
 	,m_dwEndSel(0)
 	,m_bAlertBkg(FALSE)
 	,m_bAlertText(FALSE)
+	,m_bTextColorNotFound(FALSE)
+	,m_bTextColorNotFoundEnable(FALSE)
 	,m_bToolActive(FALSE)
 	,m_bShowTooltip(FALSE)
 	,m_bTooltipOnInfo(FALSE)
@@ -91,6 +93,7 @@ CComboBoxExt::CComboBoxExt()
 	m_hWndToolTip = NULL;
 	m_crAlertBkg = GetSysColor(COLOR_WINDOW);
 	m_crAlertText = GetSysColor(COLOR_WINDOWTEXT);
+	m_crTextColorNotFound = RGB(255, 0, 0);
 	m_BrushAlert.CreateSolidBrush(m_crAlertBkg);
 }
 
@@ -268,14 +271,21 @@ HBRUSH CComboBoxExt::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
 	if(CTLCOLOR_EDIT == nCtlColor)
 	{
-		if(! m_bAlertText)
-			pDC->SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
+		if (m_bTextColorNotFound)					
+				pDC->SetTextColor(m_crTextColorNotFound);		
 		else
-			pDC->SetTextColor(m_crAlertText);
+		{
+			if (!m_bAlertText)
+				pDC->SetTextColor(GetSysColor(COLOR_WINDOWTEXT));
+			else
+				pDC->SetTextColor(m_crAlertText);
+		}
+
 		if(! m_bAlertBkg)
 			pDC->SetBkColor(GetSysColor(COLOR_WINDOW));
 		else
 		{
+			pDC->SetBkMode(TRANSPARENT);
 			pDC->SetBkColor(m_crAlertBkg);
 			hbr = (HBRUSH)m_BrushAlert.GetSafeHandle();
 		}
@@ -291,13 +301,15 @@ BOOL CComboBoxExt::OnChildNotify(UINT message, WPARAM wParam, LPARAM lParam, LRE
 	//TRACE("%s\r\n", __FUNCTION__);
 	// TODO: Add your specialized code here and/or call the base class
 
-	if(CBS_DROPDOWNLIST != (3 & GetStyle()) || (! m_bAlertText && ! m_bAlertBkg) || WM_CTLCOLOREDIT != message)
+	if(CBS_DROPDOWNLIST != (3 & GetStyle()) || (! m_bAlertText && ! m_bAlertBkg && ! m_bTextColorNotFound) || WM_CTLCOLOREDIT != message)
 		return CComboBox::OnChildNotify(message, wParam, lParam, pLResult);
 
 	HDC hdcChild = (HDC)wParam;
 	if(NULL != hdcChild)
 	{
-		if(m_bAlertText)
+		if (m_bTextColorNotFound)
+			SetTextColor(hdcChild, m_crTextColorNotFound);
+		else if(m_bAlertText)
 			SetTextColor(hdcChild, m_crAlertText);
 		if(m_bAlertBkg)
 			SetBkColor(hdcChild, m_crAlertBkg);
@@ -472,6 +484,9 @@ BOOL CComboBoxExt::SearchText()
 
 	if(GetCount() < 1 || m_sTypedText.IsEmpty())
 	{
+		if (m_bTextColorNotFoundEnable) 
+			m_bTextColorNotFound = TRUE;
+
 		if (m_sFirstTextNotFound.IsEmpty() || m_sTypedText.Find(m_sFirstTextNotFound) == -1)
 			m_sFirstTextNotFound = m_sTypedText;		
 			
@@ -489,6 +504,9 @@ BOOL CComboBoxExt::SearchText()
 	}
 	else
 	{
+		if (m_bTextColorNotFoundEnable)
+			m_bTextColorNotFound = FALSE;
+
 		m_sFirstTextNotFound.Empty();
 		ShowDropDown();
 		FitDropDownToItems();
